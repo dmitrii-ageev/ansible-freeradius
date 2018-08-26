@@ -1,0 +1,24 @@
+#
+# {{ ansible_managed }}
+#
+# Check this guidance if you have any questions:
+# man systemd.unit
+#  -or-
+# https://www.freedesktop.org/software/systemd/man/systemd.unit.html
+#
+[Unit]
+Description="{{ freeradius__description }}"
+After=syslog.target network.target ipa.service dirsrv.target krb5kdc.service
+
+[Service]
+Type=forking
+PIDFile={{ freeradius__pid_file }}
+EnvironmentFile=-{{ freeradius__environment_file }}
+ExecStartPre=-/bin/chown -R {{ freeradius__user }}.{{ freeradius__group }} {{ freeradius__run_dir }}
+ExecStartPre={{ freeradius__daemon_file }} -C
+ExecStart={{ freeradius__daemon_file }} -d {{ freeradius__raddb_dir }} $FREERADIUS_OPTIONS
+ExecReload={{ freeradius__daemon_file }} -C
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

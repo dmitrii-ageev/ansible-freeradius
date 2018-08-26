@@ -1,0 +1,14 @@
+---
+- block:
+    - name: Delete daemon's user
+      user:
+        name: "{{ freeradius__user }}"
+        state: absent
+        remove: yes
+
+    - name: Delete daemon's group
+      group:
+        name: "{{ freeradius__group }}"
+        state: absent
+  when: freeradius__user != "root"
+...

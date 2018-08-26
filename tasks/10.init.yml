@@ -1,0 +1,16 @@
+---
+- block:
+    - name: Create a group for the daemon
+      group:
+        name: "{{ freeradius__group }}"
+        system: yes
+
+    - name: Create a user for the daemon
+      user:
+        name: "{{ freeradius__user }}"
+        group: "{{ freeradius__group }}"
+        system: yes
+        createhome: no
+        comment: "{{ freeradius__description }}"
+  when: freeradius__user != "root"
+...

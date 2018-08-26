@@ -1,0 +1,311 @@
+---
+## Service, daemon, opt_ions and description
+freeradius__service:  "radiusd"
+
+## User and group
+freeradius__user:     "radiusd"
+
+## Directories
+# Application set
+freeradius__conf_dir: "{{ freeradius__etc_dir }}/raddb"
+freeradius__data_dir: "{{ freeradius__var_dir }}/{{ freeradius__user }}"
+freeradius__keys_dir: "{{ freeradius__data_dir }}/dynamic"
+freeradius__lib_dir:  "{{ freeradius__usr_lib64_dir }}/{{ freeradius__daemon }}"
+freeradius__log_dir:  "{{ freeradius__var_log_dir }}/radius"
+freeradius__db_dir:   "{{ freeradius__var_lib_dir }}/{{ freeradius__daemon }}"
+
+## Files
+# Auxiliary files
+freeradius__environment_file: "{{ freeradius__etc_dir }}/default/{{ freeradius__service }}"
+
+## Freeradius options
+################################################################################
+#
+# Main configuration file
+#
+################################################################################
+freeradius__radius:
+  - prefix:            "{{ freeradius__usr_dir }}"
+  - exec_prefix:       "{{ freeradius__usr_dir }}"
+  - sbindir:           "{{ freeradius__usr_sbin_dir }}"
+  - sysconfdir:        "{{ freeradius__etc_dir }}"
+  - confdir:           "{{ freeradius__conf_dir }}"
+  - raddbdir:          "{{ freeradius__conf_dir }}"
+  - localstatedir:     "{{ freeradius__var_dir }}"
+  - logdir:            "{{ freeradius__log_dir }}"
+  - radacctdir:        "{{ freeradius__radacct_dir }}"
+  - name:              "{{ freeradius__service }}"
+  - run_dir:           "{{ freeradius__run_dir }}"
+  - db_dir:            "{{ freeradius__db_dir }}"
+  - libdir:            "{{ freeradius__lib_dir }}"
+  - pidfile:           "{{ freeradius__pid_file }}"
+  - checkrad:          "{{ freeradius__checkrad_file }}"
+  - modconfdir:        "{{ freeradius__conf_dir }}/mods-config"
+  - certdir:           "{{ freeradius__cert_dir }}"
+  - cadir:             "{{ freeradius__cert_dir }}"
+
+  - correct_escapes: true
+  - max_request_time: 30
+  - cleanup_delay: 5
+  - max_requests: 16384
+  - hostname_lookups: no
+  - proxy_requests: yes
+
+  - log:
+      destination: files
+      colourise: yes
+      file: "{{ freeradius__log_file }}"
+      syslog_facility: daemon
+      stripped_names: no
+      auth: no
+      auth_badpass: no
+      auth_goodpass: no
+      msg_denied: '"You are already logged in - access denied"'
+
+  - security:
+      user: "{{ freeradius__user }}"
+      group: "{{ freeradius__group }}"
+      allow_core_dumps: no
+      max_attributes: 200
+      reject_delay: 1
+      status_server: yes
+
+  - $INCLUDE proxy.conf
+  - $INCLUDE clients.conf
+  - '#$INCLUDE trigger.conf'
+
+  - thread pool:
+      start_servers: 5
+      max_servers: 32
+      min_spare_servers: 3
+      max_spare_servers: 10
+      max_requests_per_server: 0
+      auto_limit_acct: no
+
+  - modules:
+      - $INCLUDE mods-enabled/
+
+  - policy:
+      - $INCLUDE policy.d/
+
+  - $INCLUDE sites-enabled/
+
+################################################################################
+#
+# Freeradius trigger configuration
+#
+################################################################################
+freeradius__triggers:
+  snmptrap: "${snmp.trap.cmd} -c ${snmp.trap.community} ${snmp.trap.agent} FREERADIUS-NOTIFICATION-MIB"
+
+  snmp:
+    trap:
+      cmd:       "/usr/bin/snmptrap -v2c"
+      community: "public"
+      agent:     "localhost ''"
+
+  trigger:
+
+    modules:
+      args:     "radiusdModuleInstance s ''"
+      files:
+        args:   "radiusdModuleName s files ${..args}"
+        hup:    "${snmptrap}::serverModuleHup ${args}"
+      ldap:
+        args:   "radiusdModuleName s ldap ${..args}"
+        open:   "${snmptrap}::serverModuleConnectionUp ${args}"
+        close:  "${snmptrap}::serverModuleConnectionDown ${args}"
+        hup:    "${snmptrap}::serverModuleHup ${args}"
+      sql:
+        args:   "radiusdModuleName s sql ${..args}"
+        open:   "${snmptrap}::serverModuleConnectionUp ${args}"
+        close:  "${snmptrap}::serverModuleConnectionDown ${args}"
+        fail:   "${snmptrap}::serverModuleConnectionFail ${args}"
+        hup:    "${snmptrap}::serverModuleHup ${args}"
+
+    server:
+      snmptrap: "${snmp.trap.cmd} -c ${snmp.trap.community} ${snmp.trap.agent} FREERADIUS-NOTIFICATION-MIB"
+      start:    "${snmptrap}::serverStart"
+      stop:     "${snmptrap}::serverStop"
+      max_requests: "${snmptrap}::serverMaxRequests"
+      client:
+        add:    "/path/to/file %{Packet-Src-IP-Address}"
+      signal:
+        hup:    "${snmptrap}::signalHup"
+        term:   "${snmptrap}::signalTerm"
+      thread:
+        start:  "${snmptrap}::threadStart"
+        stop:   "${snmptrap}::threadStop"
+        unresponsive: "${snmptrap}::threadUnresponsive"
+        max_threads: "${snmptrap}::threadMaxThreads"
+
+    home_server:
+      args:     "radiusAuthServerAddress a %{proxy-request:Packet-Dst-IP-Address} radiusAuthClientServerPortNumber i %{proxy-request:Packet-Dst-Port} radiusAuthServIdent s '%{home_server:instance}'"
+      alive:    "${snmptrap}::homeServerAlive ${args}"
+      zombie:   "${snmptrap}::homeServerZombie ${args}"
+      dead:     "${snmptrap}::homeServerDead ${args}"
+
+    home_server_pool:
+      args:     "radiusdConfigName s %{home_server:instance}"
+      normal:   "${snmptrap}::homeServerPoolNormal ${args}"
+      fallback: "${snmptrap}::homeServerPoolFallback ${args}"
+
+################################################################################
+#
+### Freeradius clients
+#
+################################################################################
+freeradius__clients:
+  client localhost:
+    ipaddr: 127.0.0.1
+    proto: '*'
+    secret: testing123
+    require_message_authenticator: no
+    nas_type: other
+    limit:
+      max_connection: 16
+      lifetime: 0
+      idle_timeout: 30
+  client localhost_ipv6:
+    ipv6addr: ::1
+    secret: testing123
+
+################################################################################
+#
+### Freeradius sites
+#
+################################################################################
+freeradius__sites:
+  default:
+    server default:
+      - listen:
+          type: auth
+          ipaddr: '*'
+          port: 0
+          limit:
+            max_connections: 16
+            lifetime: 0
+            idle_timeout: 30
+      - listen:
+          ipaddr: '*'
+          port: 0
+          type: acct
+          limit: {}
+      - listen:
+          ipv6addr: '::'
+          type: auth
+          port: 0
+          limit:
+            max_connections: 16
+            lifetime: 0
+            idle_timeout: 30
+      - listen:
+          ipv6addr: '::'
+          port: 0
+          type: acct
+          limit: {}
+      - authorize:
+          - filter_username
+          - preprocess
+          - chap
+          - mschap
+          - digest
+          - suffix
+          - eap:
+              ok: return
+          - files
+          - -sql
+          - -ldap
+          - expiration
+          - logintime
+          - pap
+      - authenticate:
+          - Auth-Type PAP:
+              - pap
+          - Auth-Type CHAP:
+              - chap
+          - Auth-Type MS-CHAP:
+              - mschap
+          - mschap
+          - digest
+          - eap
+      - preacct:
+          - preprocess
+          - acct_unique
+          - suffix
+          - files
+      - accounting:
+          - detail
+          - unix
+          - -sql
+          - exec
+          - attr_filter.accounting_response
+      - session: {}
+      - post-auth:
+          - update:
+              - '&reply: += &session-state:'
+          - -sql
+          - exec
+          - remove_reply_message_if_eap
+          - Post-Auth-Type REJECT:
+              - -sql
+              - attr_filter.access_reject
+              - eap
+              - remove_reply_message_if_eap
+      - Post-Auth-Type Challenge: {}
+
+  inner-tunnel:
+    server inner-tunnel:
+      listen:
+        ipaddr: 127.0.0.1
+        port: 18120
+        type: auth
+      authorize:
+        - filter_username
+        - chap
+        - mschap
+        - suffix
+        - update control:
+            - '&Proxy-To-Realm := LOCAL'
+        - eap:
+            ok: return
+        - files
+        - -sql
+        - -ldap
+        - expiration
+        - logintime
+        - pap
+      authenticate:
+        - Auth-Type PAP:
+            - pap
+        - Auth-Type CHAP:
+            - chap
+        - Auth-Type MS-CHAP:
+            - mschap
+        - mschap
+        - eap
+      session:
+        - radutmp
+      post-auth:
+        - -sql
+        - if (0):
+            - update reply:
+                - User-Name !* ANY
+                - Message-Authenticator !* ANY
+                - EAP-Message !* ANY
+                - Proxy-State !* ANY
+                - MS-MPPE-Encryption-Types !* ANY
+                - MS-MPPE-Encryption-Policy !* ANY
+                - MS-MPPE-Send-Key !* ANY
+                - MS-MPPE-Recv-Key !* ANY
+            - update:
+                - '&outer.session-state: += &reply:'
+        - Post-Auth-Type REJECT:
+            - -sql
+            - attr_filter.access_reject
+            - update outer.session-state:
+                - '&Module-Failure-Message := &request:Module-Failure-Message'
+      pre-proxy: {}
+      post-proxy:
+        - eap
+...

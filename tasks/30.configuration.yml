@@ -1,0 +1,41 @@
+---
+- name: Create configuration files
+  template:
+    src: template.conf
+    dest: "{{ item.key }}"
+    owner: "{{ freeradius__user }}"
+    group: "{{ freeradius__group }}"
+    mode: "{{ freeradius__file_mode }}"
+  loop: "{{ query('dict', freeradius__config) }}"
+  notify: Restart freeradius service
+
+- name: Create site configuration files
+  template:
+    src: template.conf
+    dest: "{{ freeradius__sites_available_dir }}/{{ item.key }}"
+    owner: "{{ freeradius__user }}"
+    group: "{{ freeradius__group }}"
+    mode: "{{ freeradius__file_mode }}"
+  loop: "{{ query('dict', freeradius__sites) }}"
+  notify: Restart freeradius service
+
+- name: Trigger site availability status
+  file:
+    src: "{{ freeradius__sites_available_dir }}/{{ item.key }}"
+    dest: "{{ freeradius__sites_enabled_dir }}/{{ item.key }}"
+    state: "link"
+    owner: "{{ freeradius__user }}"
+    group: "{{ freeradius__group }}"
+    mode: "{{ freeradius__file_mode }}"
+  when: item.value.disabled is not defined
+  loop: "{{ query('dict', freeradius__sites) }}"
+  notify: Restart freeradius service
+
+- name: Unlink disabled sites
+  file:
+    dest: "{{ freeradius__sites_enabled_dir }}/{{ item.key }}"
+    state: "absent"
+  when: item.value.disabled is defined
+  loop: "{{ query('dict', freeradius__sites) }}"
+  notify: Restart freeradius service
+...

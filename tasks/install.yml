@@ -1,0 +1,6 @@
+---
+- include_tasks: 10.init.yml
+- include_tasks: 20.installation.yml
+- include_tasks: 30.configuration.yml
+- include_tasks: 40.run.yml
+...

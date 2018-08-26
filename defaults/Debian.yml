@@ -1,0 +1,170 @@
+---
+## Service, daemon, opt_ions and description
+freeradius__service:    "freeradius"
+
+## User and group
+freeradius__user:       "freerad"
+
+## Directories
+# Application set
+freeradius__conf_dir:   "{{ freeradius__etc_dir }}/freeradius"
+freeradius__data_dir:   "{{ freeradius__var_dir }}/cache/{{ freeradius__user }}"
+freeradius__keys_dir:   "{{ freeradius__conf_dir }}"
+freeradius__lib_dir:    "{{ freeradius__usr_lib_dir }}/{{ freeradius__daemon }}"
+freeradius__log_dir:    "{{ freeradius__var_log_dir }}/freeradius"
+freeradius__db_dir:     "{{ freeradius__conf_dir }}"
+
+## Files
+# Auxiliary files
+freeradius__environment_file: "{{ freeradius__etc_dir }}/default/{{ freeradius__service }}"
+
+## Freeradius options
+################################################################################
+#
+# Main configuration file
+#
+################################################################################
+freeradius__radius:
+  - prefix:               "{{ freeradius__usr_dir }}"
+  - exec_prefix:          "{{ freeradius__usr_dir }}"
+  - sbindir:              "{{ freeradius__usr_sbin_dir }}"
+  - sysconfdir:           "{{ freeradius__etc_dir }}"
+  - confdir:              "{{ freeradius__conf_dir }}"
+  - raddbdir:             "{{ freeradius__conf_dir }}"
+  - localstatedir:        "{{ freeradius__var_dir }}"
+  - logdir:               "{{ freeradius__log_dir }}"
+  - radacctdir:           "{{ freeradius__radacct_dir }}"
+  - name:                 "{{ freeradius__service }}"
+  - run_dir:              "{{ freeradius__run_dir }}"
+  - db_dir:               "{{ freeradius__db_dir }}"
+  - libdir:               "{{ freeradius__lib_dir }}"
+  - pidfile:              "{{ freeradius__pid_file }}"
+  - checkrad:             "{{ freeradius__checkrad_file }}"
+
+  - max_request_time: 30
+  - cleanup_delay: 5
+  - max_requests: 16384
+  - hostname_lookups: no
+  - allow_coredumps: no
+  - proxy_requests : yes
+  - regular_expressions: yes
+  - extended_expressions: yes
+
+  - user: "{{ freeradius__user }}"
+  - group: "{{ freeradius__group }}"
+
+  - listen:
+      type: auth
+      ipaddr: '*'
+      port: 0
+
+  - listen:
+      type: acct
+      ipaddr: '*'
+      port: 0
+
+  - log:
+      destination: files
+      file: "{{ freeradius__log_file }}"
+      syslog_facility: daemon
+      stripped_names: no
+      auth: no
+      auth_badpass: no
+      auth_goodpass: no
+
+  - security:
+      max_attributes: 200
+      reject_delay: 1
+      status_server: yes
+      allow_vulnerable_openssl: no
+
+  - $INCLUDE proxy.conf
+  - $INCLUDE clients.conf
+
+  - thread pool:
+      start_servers: 5
+      max_servers: 32
+      min_spare_servers: 3
+      max_spare_servers: 10
+      max_requests_per_server: 0
+
+  - modules:
+      - $INCLUDE ${confdir}/modules/
+      - $INCLUDE eap.conf
+
+  - instantiate:
+      - exec
+      - expr
+      - expiration
+      - logintime
+
+  - $INCLUDE policy.conf
+  - $INCLUDE sites-enabled/
+
+################################################################################
+#
+# Freeradius eap configuration
+#
+################################################################################
+freeradius__eap:
+  eap:
+    - default_eap_type: md5
+    - timer_expire: 60
+    - ignore_unknown_eap_types: no
+    - cisco_accounting_username_bug: no
+    - max_sessions: ${max_requests}
+
+    - md5: []
+
+    - leap: []
+
+    - gtc:
+        auth_type: PAP
+
+    - tls:
+        - certdir: "{{ freeradius__cert_dir }}"
+        - cadir: "{{ freeradius__cert_dir }}"
+        - private_key_password: whatever
+        - private_key_file: "{{ freeradius__private_key_file }}"
+        - certificate_file: "{{ freeradius__certificate_file }}"
+        - CA_file: "{{ freeradius__ca_file }}"
+        - dh_file: "{{ freeradius__dh_file }}"
+        - random_file: /dev/urandom
+        - CA_path: "{{ freeradius__cert_dir }}"
+        - cipher_list: "DEFAULT"
+        - make_cert_command: "{{ freeradius__cert_dir }}/bootstrap"
+        - ecdh_curve: "prime256v1"
+        - cache:
+            enable: no
+            max_entries: 255
+            ocsp:
+              enable: no
+              override_cert_url: yes
+              url: "http://127.0.0.1/ocsp/"
+            verify: []
+
+    - ttls:
+        default_eap_type: md5
+        copy_request_to_tunnel: no
+        use_tunneled_reply: no
+        virtual_server: "inner-tunnel"
+
+    - peap:
+        default_eap_type: mschapv2
+        copy_request_to_tunnel: no
+        use_tunneled_reply: no
+        virtual_server: "inner-tunnel"
+
+    - mschapv2: []
+
+################################################################################
+#
+### Freeradius clients
+#
+################################################################################
+freeradius__clients:
+  client localhost:
+    ipaddr: 127.0.0.1
+    secret: testing123
+    require_message_authenticator: no
+...

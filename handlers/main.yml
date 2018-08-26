@@ -1,0 +1,46 @@
+---
+- name: Reload systemd configuration
+  systemd:
+    name: system
+    daemon_reload: yes
+  listen: Systemd daemon reload
+
+- name: Enable freeradius service with systemd manager
+  systemd:
+    name: "{{ freeradius__service }}"
+    enabled: yes
+  listen: Enable freeradius service
+
+- name: Using systemd manager to start freeradius
+  systemd:
+    name: "{{ freeradius__service }}"
+    state: started
+  register: freeradius__service_started
+  when:
+    - freeradius__service_restarted is undefined
+  listen: Start freeradius service
+
+- name: Using systemd manager to stop freeradius
+  systemd:
+    name: "{{ freeradius__service }}"
+    state: stopped
+  listen: Stop freeradius service
+
+- name: Using systemd manager to restart freeradius
+  systemd:
+    name: "{{ freeradius__service }}"
+    state: restarted
+  register: freeradius__service_restarted
+  when:
+    - freeradius__service_started is undefined
+  listen: Restart freeradius service
+
+- name: Using systemd manager to reload freeradius
+  systemd:
+    name: "{{ freeradius__service }}"
+    state: reloaded
+  when:
+    - freeradius__service_started is undefined
+    - freeradius__service_restarted is undefined
+  listen: Reload freeradius service
+...

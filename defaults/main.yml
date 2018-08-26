@@ -1,0 +1,456 @@
+---
+# (!) Commented variables are OS-specific, they are defined in Debian.yml and RedHat.yml files
+## Status of package ( present, absent )
+freeradius__state:               present
+
+## Service, daemon, opt_ions and description
+freeradius__service:            "freeradius"
+freeradius__daemon:              "{{ freeradius__service }}"
+freeradius__daemon_options:      ""
+freeradius__description:         "FREERADIUS is open source implementation of RADIUS, an IETF protocol for AAA"
+
+## User and group
+#freeradius__user:               "freeradius/freerad"
+freeradius__group:               "{{ freeradius__user }}"
+
+## Modes
+freeradius__dir_mode:            "0750"
+freeradius__file_mode:           "0640"
+freeradius__exec_mode:           "0755"
+
+## Directories
+# Standard set
+freeradius__root_dir:            ""
+freeradius__etc_dir:             "{{ freeradius__root_dir }}/etc"
+freeradius__bin_dir:             "{{ freeradius__root_dir }}/bin"
+freeradius__sbin_dir:            "{{ freeradius__root_dir }}/sbin"
+freeradius__lib_dir:             "{{ freeradius__root_dir }}/lib"
+freeradius__lib64_dir:           "{{ freeradius__root_dir }}/lib64"
+freeradius__usr_dir:             "{{ freeradius__root_dir }}/usr"
+freeradius__usr_bin_dir:         "{{ freeradius__usr_dir }}/bin"
+freeradius__usr_sbin_dir:        "{{ freeradius__usr_dir }}/sbin"
+freeradius__usr_lib_dir:         "{{ freeradius__usr_dir }}/lib"
+freeradius__usr_lib64_dir:       "{{ freeradius__usr_dir }}/lib64"
+freeradius__var_dir:             "{{ freeradius__root_dir }}/var"
+freeradius__var_run_dir:         "{{ freeradius__var_dir }}/run"
+freeradius__var_lib_dir:         "{{ freeradius__var_dir }}/lib"
+freeradius__var_log_dir:         "{{ freeradius__var_dir }}/log"
+
+## Application set
+#freeradius__conf_dir:           ""
+freeradius__raddb_dir:           "{{ freeradius__conf_dir }}"
+freeradius__cert_dir:            "{{ freeradius__conf_dir }}/certs"
+freeradius__run_dir:             "{{ freeradius__var_run_dir }}/{{ freeradius__daemon }}"
+#freeradius__log_dir:            ""
+#freeradius__lib_dir:            ""
+freeradius__radacct_dir:         "{{ freeradius__log_dir }}/radacct"
+#freeradius__db_dir:             ""
+freeradius__certs_dir:           "{{ freeradius__conf_dir }}/certs"
+freeradius__mods_available_dir:  "{{ freeradius__conf_dir }}/mods-available"
+freeradius__mods_config_dir:     "{{ freeradius__conf_dir }}/mods-config"
+freeradius__mods_enabled_dir:    "{{ freeradius__conf_dir }}/mods-enabled"
+freeradius__policy_dir:          "{{ freeradius__conf_dir }}/policy.d"
+freeradius__sites_available_dir: "{{ freeradius__conf_dir }}/sites-available"
+freeradius__sites_enabled_dir:   "{{ freeradius__conf_dir }}/sites-enabled"
+
+freeradius__directories:
+  - "{{ freeradius__conf_dir }}"
+  - "{{ freeradius__run_dir }}"
+  - "{{ freeradius__log_dir }}"
+  - "{{ freeradius__radacct_dir }}"
+  - "{{ freeradius__db_dir }}"
+  - "{{ freeradius__certs_dir }}"
+  - "{{ freeradius__mods_available_dir }}"
+  - "{{ freeradius__mods_config_dir }}"
+  - "{{ freeradius__mods_enabled_dir }}"
+  - "{{ freeradius__sites_available_dir }}"
+  - "{{ freeradius__sites_enabled_dir }}"
+  - "{{ freeradius__policy_dir | default() }}"
+
+## Files
+# FREERADIUS
+freeradius__daemon_file:           "{{ freeradius__usr_sbin_dir }}/{{ freeradius__daemon }}"
+freeradius__checkrad_file:         "{{ freeradius__usr_sbin_dir }}/checkrad"
+
+# FREERADIUS CONFIGURATION FILES
+freeradius__conf_file:             "{{ freeradius__radiusd_conf_file }}"
+freeradius__clients_conf_file:     "{{ freeradius__conf_dir }}/clients.conf"
+freeradius__dictionary_file:       "{{ freeradius__conf_dir }}/dictionary"
+freeradius__eap_file:              "{{ freeradius__conf_dir }}/eap.conf"
+freeradius__hints_file:            "{{ freeradius__conf_dir }}/hints"
+freeradius__huntgroups_file:       "{{ freeradius__conf_dir }}/hintgroups"
+freeradius__policy_conf_file:      "{{ freeradius__conf_dir }}/policy.conf"
+freeradius__proxy_conf_file:       "{{ freeradius__conf_dir }}/proxy.conf"
+freeradius__radiusd_conf_file:     "{{ freeradius__conf_dir }}/radiusd.conf"
+freeradius__templates_conf_file:   "{{ freeradius__conf_dir }}/templates.conf"
+freeradius__triggers_file:         "{{ freeradius__conf_dir }}/triggers"
+freeradius__users_file:            "{{ freeradius__conf_dir }}/users"
+freeradius__ca_file:               "{{ freeradius__cert_dir }}/ca.pem"
+freeradius__dh_file:               "{{ freeradius__cert_dir }}/dh"
+freeradius__certificate_file:      "{{ freeradius__cert_dir }}/server.pem"
+freeradius__private_key_file:      "{{ freeradius__cert_dir }}/server.key"
+
+# FREERADIUS AUXILIARY FILES
+#freeradius__environment_file:     ""
+freeradius__logrotate_file_name:   "{{ freeradius__service }}"
+freeradius__vendor_unit_file:      "{{ freeradius__lib_dir }}/systemd/system/{{ freeradius__service }}.service"
+freeradius__system_unit_file:      "{{ freeradius__etc_dir }}/systemd/system/{{ freeradius__service }}.service"
+freeradius__system_init_file:      "{{ freeradius__etc_dir }}/init.d/{{ freeradius__service }}"
+freeradius__pid_file:              "{{ freeradius__run_dir }}/{{ freeradius__daemon }}.pid"
+freeradius__log_file:              "{{ freeradius__log_dir }}/{{ freeradius__daemon }}.log"
+
+## Required packages
+freeradius__packages:
+  Ubuntu:
+    16:
+      main_package: "freeradius"
+      required_packages:
+        - "freeradius-common"
+        - "freeradius-utils"
+    18:
+      main_package: "freeradius"
+      required_packages:
+        - "freeradius-common"
+        - "freeradius-utils"
+  CentOS:
+    7:
+      main_package: "freeradius"
+      required_packages:
+        - "freeradius-doc"
+        - "freeradius-utils"
+      # - 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm'
+
+## Configuration
+################################################################################
+#
+## FREERADIUS GLOBAL CONFIG - a dictionary variable that joins all configuration pieces alltogether.
+#
+################################################################################
+freeradius__config:
+  "{{ freeradius__clients_conf_file }}":     "{{ freeradius__clients       | default() }}"
+  "{{ freeradius__dictionary_file }}":       "{{ freeradius__dictionary    | default() }}"
+  "{{ freeradius__eap_file }}":              "{{ freeradius__eap           | default() }}"
+  "{{ freeradius__hints_file }}":            "{{ freeradius__hints         | default() }}"
+  "{{ freeradius__huntgroups_file }}":       "{{ freeradius__huntgroups    | default() }}"
+  "{{ freeradius__policy_conf_file }}":      "{{ freeradius__policy        | default() }}"
+  "{{ freeradius__proxy_conf_file }}":       "{{ freeradius__proxy         | default() }}"
+  "{{ freeradius__radiusd_conf_file }}":     "{{ freeradius__radius        | default() }}"
+  "{{ freeradius__templates_conf_file }}":   "{{ freeradius__templates     | default() }}"
+  "{{ freeradius__triggers_file }}":         "{{ freeradius__triggers      | default() }}"
+  "{{ freeradius__users_file }}":            "{{ freeradius__users         | default() }}"
+
+
+################################################################################
+#
+### Freeradius dictionary
+#
+################################################################################
+freeradius__dictionary:
+  - $INCLUDE        /usr/share/freeradius/dictionary
+
+################################################################################
+#
+### Freeradius hints
+#
+################################################################################
+freeradius__hints:
+  - DEFAULT:
+      conditionals:
+        - Suffix == ".ppp"
+        - Strip-User-Name = Yes
+      attributes:
+        - Hint = "PPP"
+        - Service-Type = Framed-User
+        - Framed-Protocol = PPP
+  - DEFAULT:
+      conditionals:
+        - Suffix == ".slip"
+        - Strip-User-Name = Yes
+      attributes:
+        - Hint = "SLIP"
+        - Service-Type = Framed-User
+        - Framed-Protocol = SLIP
+  - DEFAULT:
+      conditionals:
+        - Suffix == ".cslip"
+        - Strip-User-Name = Yes
+      attributes:
+        - Hint = "CSLIP"
+        - Service-Type = Framed-User
+        - Framed-Protocol = SLIP
+        - Framed-Compression = Van-Jacobson-TCP-IP
+
+################################################################################
+#
+### Freeradius policy - really big section (!)
+#
+################################################################################
+freeradius__policy:
+  policy:
+    - forbid_eap:
+        if (EAP-Message):
+          - reject
+
+    - permit_only_eap:
+        - if (!EAP-Message):
+            if (!"%{outer.request:EAP-Message}"):
+              - reject
+
+    - deny_realms:
+        if (User-Name =~ /@|\\/):
+          - reject
+
+    - '# If you want the server to pretend that it is dead,'
+    - '# then use the "do_not_respond" policy.'
+    - do_not_respond:
+        - update control:
+            - Response-Packet-Type := Do-Not-Respond
+        - handled
+
+    - filter_username:
+        - if (User-Name =~ / /):
+            - update reply:
+                - 'Reply-Message += "Rejected: Username contains whitespace"'
+            - reject
+
+        - if(User-Name =~ /@.*@/ ):
+            - update reply:
+                - 'Reply-Message += "Rejected: Multiple @ in username"'
+            - reject
+
+        - if (User-Name =~ /\\.\\./ ):
+            - update reply:
+                - 'Reply-Message += "Rejected: Username contains ..s"'
+            - reject
+
+        - if (User-Name !~ /@(.+)\\.(.+)$/):
+            - update reply:
+                - 'Reply-Message += "Rejected: Realm does not have at least one dot seperator"'
+            - reject
+
+        - if (User-Name =~ /\\.$/):
+            - update reply:
+                - 'Reply-Message += "Rejected: Realm ends with a dot"'
+            - reject
+
+        - if (User-Name =~ /@\\./):
+            - update reply:
+                - 'Reply-Message += "Rejected: Realm begins with a dot"'
+            - reject
+
+    - cui_authorize:
+        update request:
+          - Chargeable-User-Identity:='\\000'
+
+    - cui_postauth:
+        - if (FreeRadius-Proxied-To == 127.0.0.1):
+            if (outer.request:Chargeable-User-Identity):
+              update outer.reply:
+                - Chargeable-User-Identity:="%{md5:%{config:cui_hash_key}%{User-Name}}"
+        - else:
+            if (Chargeable-User-Identity):
+              update reply:
+                - Chargeable-User-Identity="%{md5:%{config:cui_hash_key}%{User-Name}}"
+
+    - cui_updatedb:
+        if (reply:Chargeable-User-Identity):
+          - cui
+
+    - cui_accounting:
+        - if (!Chargeable-User-Identity):
+            update request:
+              - Chargeable-User-Identity := "%{cui: SELECT cui FROM cui WHERE clientipaddress = '%{Client-IP-Address}' AND callingstationid = '%{Calling-Station-Id}' AND username = '%{User-Name}'}"
+        - if (Chargeable-User-Identity && (Chargeable-User-Identity != "")):
+            - cui
+
+    - mac-addr = ([0-9a-f]{2})[^0-9a-f]?([0-9a-f]{2})[^0-9a-f]?([0-9a-f]{2})[^0-9a-f]?([0-9a-f]{2})[^0-9a-f]?([0-9a-f]{2})[^0-9a-f]?([0-9a-f]{2})
+
+    - rewrite.called_station_id:
+        - if((Called-Station-Id) && "%{Called-Station-Id}" =~ /^%{config:policy.mac-addr}(:(.+))?$/i):
+            - update request:
+                - Called-Station-Id := "%{tolower:%{1}-%{2}-%{3}-%{4}-%{5}-%{6}}"
+            - if ("%{8}"):
+                update request:
+                  - Called-Station-Id := "%{Called-Station-Id}:%{8}"
+            - updated
+        - else:
+            - noop
+
+    - dhcp_sqlippool.post-auth:
+        - update request:
+            - User-Name = "DHCP-%{DHCP-Client-Hardware-Address}"
+            - Calling-Station-Id = "%{DHCP-Client-Hardware-Address}"
+            - Acct-Status-Type = Start
+            - NAS-IP-Address = "{% raw %}%{ %{DHCP-Gateway-IP-Address}:-127.0.0.1}{% endraw %}"
+        - fail
+        - if (ok):
+            update reply:
+              - DHCP-Your-IP-Address = "%{reply:Framed-IP-Address}"
+
+################################################################################
+#
+### Freeradius proxy
+#
+################################################################################
+freeradius__proxy:
+  - proxy server:
+      default_fallback: no
+  - home_server localhost:
+      type: auth
+      ipaddr: 127.0.0.1
+      port: 1812
+      secret: testing123
+      response_window: 20
+      zombie_period: 40
+      revive_interval: 120
+      status_check: status-server
+      check_interval: 30
+      check_timeout: 4
+      num_answers_to_alive: 3
+      max_outstanding: 65536
+      coa:
+        irt: 2
+        mrt: 16
+        mrc: 5
+        mrd: 30
+      limit:
+        max_connections: 16
+        max_requests: 0
+        lifetime: 0
+        idle_timeout: 0
+  - home_server_pool my_auth_failover:
+      type: fail-over
+      home_server: localhost
+  - realm example.com:
+      auth_pool: my_auth_failover
+  - realm LOCAL:
+      - '# If we do not specify a server pool, the realm is LOCAL, requests are not proxied to it.'
+
+################################################################################
+#
+### Freeradius templates
+#
+################################################################################
+freeradius__templates:
+  temlaptes:
+    home_server:
+      response_window: 20
+      zombie_period: 40
+      revive_interval: 120
+
+    example_com:
+      type: auth
+      port: 1812
+      secret: testing123
+      response_window: 20
+
+################################################################################
+#
+### Freeradius users
+#
+################################################################################
+freeradius__users:
+  - DEFAULT:
+      conditionals:
+        - Framed-Protocol == PPP
+      attributes:
+        - Framed-Protocol = PPP
+        - Framed-Compression = Van-Jacobson-TCP-IP
+  - DEFAULT:
+      conditionals:
+        - Hint == "CSLIP"
+      attributes:
+        - Framed-Protocol = SLIP
+        - Framed-Compression = Van-Jacobson-TCP-IP
+  - DEFAULT:
+      conditionals:
+        - Hint == "SLIP"
+      attributes:
+        - Framed-Protocol = SLIP
+
+################################################################################
+#
+### Freeradius sites
+#
+################################################################################
+freeradius__sites:
+  default:
+    server default:
+      - authorize:
+          - preprocess
+          - chap
+          - mschap
+          - digest
+          - suffix
+          - eap:
+              ok: return
+          - files
+          - expiration
+          - logintime
+          - pap
+      - authenticate:
+          - Auth-Type PAP:
+              - pap
+          - Auth-Type CHAP:
+              - chap
+          - Auth-Type MS-CHAP:
+              - mschap
+          - digest
+          - unix
+          - eap
+      - preacct:
+          - preprocess
+          - acct_unique
+          - suffix
+          - files
+      - accounting:
+          - detail
+          - exec
+          - attr_filter.accounting_response
+      - session:
+          - radutmp
+      - post-auth:
+          - exec
+          - Post-Auth-Type REJECT:
+              - eap
+              - attr_filter.access_reject
+      - pre-proxy: []
+      - post-proxy:
+          - eap
+
+  inner-tunnel:
+    server inner-tunnel:
+      listen:
+        ipaddr: 127.0.0.1
+        port: 18120
+        type: auth
+      authorize:
+        - chap
+        - mschap
+        - suffix
+        - update control:
+            - Proxy-To-Realm := LOCAL
+        - eap:
+            ok: return
+        - files
+        - expiration
+        - logintime
+        - pap
+      authenticate:
+        - Auth-Type PAP:
+            - pap
+        - Auth-Type CHAP:
+            - chap
+        - Auth-Type MS-CHAP:
+            - mschap
+        - unix
+        - eap
+      session:
+        - radutmp
+      post-auth:
+        Post-Auth-Type REJECT:
+          - attr_filter.access_reject
+      pre-proxy: []
+      post-proxy:
+        - eap
+...

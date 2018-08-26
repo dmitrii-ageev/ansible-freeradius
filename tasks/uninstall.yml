@@ -1,0 +1,6 @@
+---
+- include_tasks: 60.stop.yml
+- include_tasks: 70.unconfiguration.yml
+- include_tasks: 80.uninstallation.yml
+- include_tasks: 90.done.yml
+...

@@ -1,0 +1,7 @@
+---
+- name: Delete freeradius configuration files
+  file:
+    path: "{{ item.key }}"
+    state: "absent"
+  loop: "{{ query('dict', freeradius__config) }}"
+...

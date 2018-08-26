@@ -1,0 +1,10 @@
+---
+- name: Include OS-specific tasks
+  include_vars: "../defaults/{{ ansible_os_family }}.yml"
+- include_tasks: preflight_check.yml
+
+- include_tasks: install.yml
+  when: freeradius__state == "present"
+- include_tasks: uninstall.yml
+  when: freeradius__state == "absent"
+...
